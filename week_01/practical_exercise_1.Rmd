@@ -169,32 +169,164 @@ The general linear model: $Y = X \beta + \epsilon$:
 Do a linear regression, expressing fuel usage as a function of weight using the function __lm__  
 ```{r, eval=FALSE}
 data(mtcars)
-model <- lm(formula=..., data=...)
+model_lin <- lm(formula = mpg ~ wt, data=mtcars)
 ```
 1. extract $\hat{\beta}$, $Y$, $\hat{Y}$, $X$ and $\epsilon$ from __model__ (hint: have a look at the function __model.matrix__)  
     i. create a plot that illustrates $Y$ and $\hat{Y}$ (if you are feeling ambitious, also include $\epsilon$ (hint: you can use the function __arrows__))
+```{r}
+# beta
+b_hat_1 <- model_lin$coefficients
+# Y
+y_org <- model.frame(model_lin)[,1]
+# Y_hat
+y_fit <- model_lin$fitted.values
+# design matrix
+x_matrix <- model.matrix(model_lin)
+# epsilon
+error <- model_lin$residuals
+
+
+data_plot <- data_frame(y_org, y_fit, x_val = x_matrix[,2])
+plot_lin <- data_plot %>% 
+ggplot(aes(x = x_val, y = y_org, colour = "red")) +
+  geom_segment(aes(xend = x_val, yend = y_fit, colour = "green")) +
+  geom_point() +
+  geom_point(aes(y = y_fit, colour = "blue")) +
+  geom_abline(intercept = b_hat_1[1], slope = b_hat_1[2])
+
+plot_lin
+```
+    
 2. estimate $\beta$ for a quadratic model ($y = {\beta}_{2} x^2 + {\beta}_{1} x + {\beta}_{0}$) using ordinary least squares _without_ using __lm__; $\hat{\beta} = {({X}^{T} X)}^{-1} {X}^{T} Y$ (hint: add a third column to $X$ from step 1)
+```{r}
+ones <- c(rep(1,length(mtcars$wt)))
+x <- c(mtcars$wt)
+x_2 <- x**2
+y <- c(mtcars$mpg)
+
+x_m <- matrix(c(ones, x, x_2), ncol = 3)
+
+b_hat_2 <- solve(t(x_m) %*% x_m) %*% t(x_m) %*% y
+```
+
 3. compare your acquired $\hat{\beta}$ with the output of the corresponding quadratic model created using __lm__ (hint: use the function __I__, see details under help and the sub-section formula operators here: https://www.datacamp.com/community/tutorials/r-formula-tutorial)  
     i. create a plot that illustrates $Y$ and $\hat{Y}$ (if you are feeling ambitious, also include $\epsilon$ (hint: you can use the function __arrows__))  
+```{r}
+#comparison of coefficients
+model_quad <- lm(formula = mpg ~ wt + I(wt**2), data=mtcars)
+model_quad$coefficients
+b_hat_2
+```
+
+
+```{r}
+#plot of fitted and original values
+# Y
+y_org <- model.frame(model_quad)[,1]
+# Y_hat
+y_fit <- model_quad$fitted.values
+# design matrix
+x_matrix <- model.matrix(model_quad)
+# epsilon
+error <- model_quad$residuals
+
+
+data_plot_quad <- data_frame(y_org, y_fit, x_val = x_matrix[,2])
+plot_quad <- data_plot_quad %>% 
+ggplot(aes(x = x_val, y = y_org, colour = "red")) +
+  geom_segment(aes(xend = x_val, yend = y_fit, colour = "green")) +
+  geom_point() +
+  geom_point(aes(y = y_fit, colour = "blue")) +
+  geom_smooth(method = "lm", formula = y~poly(x,2), colour = "pink", alpha = 0)
+
+plot_quad
+```
+
 
 ## Exercise 2
 Compare the plotted quadratic fit to the linear fit  
 
 1. which seems better?  
+```{r}
+plot_lin;plot_quad
+
+#actually quite hard to assess. But I will place my bets on the quadratic model
+```
+
 2. calculate the sum of squared errors, (show the calculation based on $\epsilon$). Which fit has the lower sum?  
+```{r}
+eps_lin <- model$residuals
+SSE_lin <- sum(eps_lin**2)
+eps_quad <- model_quad$residuals
+SSE_quad <- sum(eps_quad**2)
+
+SSE_lin;SSE_quad
+
+#the quadratic model had the lowest SSE indicating that a quadratic model is the best fit to the data
+```
+
 3. now make a cubic fit ($y = {\beta}_{3} x^3 + {\beta}_{2} x^2 + {\beta}_{1} x + {\beta}_{0}$) and compare it to the quadratic fit  
-    i. create a plot that illustrates $Y$ and $\hat{Y}$ for both the cubic and the quadratic fits (plot them in the same plot)  
+    i. create a plot that illustrates $Y$ and $\hat{Y}$ for both the cubic and the quadratic fits (plot them in the same plot)
+```{r}
+model_cube <- lm(mpg~wt+I(wt**2)+I(wt**3), data = mtcars)
+
+#plot of fitted and original values
+# Y
+y_org <- model.frame(model_quad)[,1]
+# Y_hat
+y_fit_quad <- model_quad$fitted.values
+y_fit_cube <- model_cube$fitted.values
+# design matrix
+x_matrix <- model.matrix(model_quad)
+# epsilon
+error_quad <- model_quad$residuals
+error_cube <- model_cube$residuals
+
+
+data_plot_cube <- data_frame(y_org, y_fit_quad, y_fit_cube, x_val = x_matrix[,2])
+plot_cube <- data_plot_cube %>% 
+ggplot(aes(x = x_val)) +
+#  geom_segment(aes(xend = x_val, yend = y_fit, colour = "green")) +
+  geom_point(aes(y = y_org, colour = "green")) +
+  geom_point(aes(y = y_fit_quad, colour = "blue")) +
+  geom_point(aes(y = y_fit_cube, colour = "red"))
+#  geom_smooth(method = "lm", formula = y~poly(x,2), colour = "pink", alpha = 0)
+
+plot_cube
+
+```
+    
     ii. compare the sum of squared errors  
+```{r}
+eps_cube <- model_cube$residuals
+SSE_cube <- sum(eps_cube**2)
+
+SSE_lin;SSE_quad;SSE_cube
+```
+    
     iii. what's the estimated value of the "cubic" (${\beta}_3$) parameter? Comment on this!  
+```{r}
+model_cube$coefficients[4]
+
+#well, as we can see the beta parameter for the cubic part of the model is really low, so even though wt^3 would create rather large values, this parameter would make the number less meaningful. On a conceptual level this parameter shows that the cubic part does not have a very large influence on the dependent variable gpm. Actually, when we look at all beta-values from the quadratic model and the cube model, it seems like the variance that the cube parameter explains is already accounted for by the quadratic part of the model. 
+```
+
+    
 4. bonus question: which summary statistic is the fitted value (_Intercept_ or ${\beta}_0$ in $y = {\beta}_0$) below identical to?
 ```{r, echo=FALSE}
 lm(mpg ~ 1, data=mtcars)
+
+#the mean
+#demonstration
+
+mean(mtcars$mpg)
 ```
 ## Exercise 3
 Doing a logistic regression - estimating the probability that a car has automatic transmission (0) or manual transmission (1) based on its weight
 ```{r, eval=FALSE}
 data(mtcars)
-logistic.model <- glm(formula=..., data=..., family='binomial)
+logistic.model <- glm(formula=am~wt, data=mtcars, family='binomial')
+logistic.model
 ```
 
 Probabilities live on the range $(0, 1)$ - using the so-called logit function as a "link-function" we can map these onto the range $(-\infty, \infty)$, i.e. the real numbers.  
@@ -209,9 +341,34 @@ inv.logit <- function(x) exp(x) / (1 + exp(x))
 
 1. plot the fitted values for __logistic.model__:  
     i. what is the relation between the __linear.predictors__ and the __fitted_values__ of the __logistic.model__ object?
+```{r}
+#plot
+plot(mtcars$wt,logistic.model$fitted.values)
+
+```
+    
 2. plot the logistic function, you've estimated based on your $\hat{\beta}$, (not just the fitted values). Use an _xlim_ of (0, 7)
+```{r}
+logistic.model$coefficients[1]
+x_org <- mtcars$wt
+y_hat <- inv.logit(logistic.model$coefficients[1]+logistic.model$coefficients[2]*x)
+
+plot(x,y_hat)
+```
+
     i. what's the interpretation of the estimated $\hat{\beta}_0$ (the _Intercept_)
+```{r}
+# it is the log odds when weight is 0. Taking the inverse logit of the intercept would give the probability of manual transmission, when weight = 0. If the y-axis was measured in log odds scale, the beta-value of the intercept would indicate the intercept with the y-axis, when weight = 0.
+```
+
+    
     ii. calculate the estimated probability that the Pontiac Firebird has automatic transmission, given its weight
+```{r}
+y_pontiac <- inv.logit(logistic.model$coefficients[1]+logistic.model$coefficients[2]*mtcars[25,6])
+
+y_pontiac
+```
+    
     iii. bonus question - plot the logistic function and highlight all the cars where we guessed wrongly, if we used the following "quantizer" function:
     
 \begin{equation}
@@ -222,10 +379,75 @@ inv.logit <- function(x) exp(x) / (1 + exp(x))
   \end{cases}
 \end{equation}    
     
+```{r}
+wrong = c()
+for (i in 1:nrow(mtcars)) {
+  temp = inv.logit(as.integer(logistic.model$coefficients[1])+as.integer(logistic.model$coefficients[2])*mtcars[i,6])
+  if (temp >= 0.5) {guess_prob <- 1} 
+  else {guess_prob <- 0}
+  if (mtcars$am[i] == guess_prob) {
+    wrong <- c(wrong, 0)
+  } else {
+    wrong <- c(wrong, 1)
+  }
+}
+mtcars_new <- mtcars
+mtcars_new$wrong <- wrong
+
+# Y_hat
+y_fit_ <- logistic.model$fitted.values
+# x-values
+x_org <- mtcars_new$wt
+wrong <- mtcars_new$wrong
+
+data_plot_log_wrong <- data_frame(y_fit_, x_org, wrong)
+plot_log_wrong <- data_plot_log_wrong %>% 
+  ggplot(aes(x = x_org, y_fit_, colour = wrong)) +
+  geom_point()
+
+plot_log_wrong
+
+#the blue dots are the wrongfully guessed cars
+```
+    
+    
 3. plot quadratic fit alongside linear fit  
+```{r}
+logistic.model_quad <- glm(formula=am~wt+I(wt**2), data=mtcars, family='binomial')
+
+# Y_hat
+y_fit_ <- logistic.model$fitted.values
+y_fit_quad <- logistic.model_quad$fitted.values
+# x-values
+x_org <- mtcars$wt
+
+data_plot_log_quad <- data_frame(y_fit_, y_fit_quad, x_org)
+plot_log_quad <- data_plot_log_quad %>% 
+  ggplot(aes(x = x_org)) +
+  geom_point(aes(y = y_fit_, colour = "green")) +
+  geom_point(aes(y = y_fit_quad, colour = "blue"))
+
+plot_log_quad
+
+```
+
     i. judging visually, does adding a quadratic term make a difference?
+```{r}
+#no, not at all
+```
+    
     ii. check the details in the help of the AIC function - which of the models provide the better fit according to the AIC values and the residual deviance respectively?
+```{r}
+logistic.model$deviance;logistic.model$aic;logistic.model_quad$deviance;logistic.model_quad$aic
+
+#according to AIC values it is the model without a quadratic term. According to residual deviance it is the model with a quadratic term
+```
+    
     iii. in your own words, why might it be good to penalise a model like the quadratic model, we just fitted.
+```{r}
+#it adds complexity and risks overfitting
+```
+    
     
 # Next time
 We are going to looking at extending our models with so called random effects. We need to install the package "lme4" for this. Run the code below or install it from your package manager (Linux)  
