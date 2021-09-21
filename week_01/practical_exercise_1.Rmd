@@ -2,7 +2,7 @@
 title: "practical_exercise_1, Methods 3, 2021, autumn semester"
 author: 'Niels Aalund Krogsgaard'
 date: "20-09-2021"
-output: html_document
+output: rmarkdown::github_document
 ---
 
 <style type="text/css">
