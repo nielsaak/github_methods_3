@@ -129,7 +129,8 @@ model_two_3 <- lmer(f0mn~gender + (1|scenario) + (1|subject), data = politeness,
     
     v. which of the models has the lowest residual standard deviation, also compare the Akaike Information Criterion `AIC`?
 ```{r}
-anova(model_two_1,model_two_2,model_two_3)
+#anova(model_two_1,model_two_2,model_two_3)
+ranef(model_two_3)
 ```
     
     vi. which of the second-level effects explains the most variance?
