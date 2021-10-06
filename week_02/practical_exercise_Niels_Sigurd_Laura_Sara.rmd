@@ -52,8 +52,8 @@ The subjects are the participants of the study - F females whereas M is male.*
     
 ```{r}
 #investigating the data
-ls.str(politeness)
-
+#ls.str(politeness)
+glimpse(politeness)
 ```
 
 
@@ -175,12 +175,13 @@ model4 <- lmer(f0mn ~ gender.f + (1 | scenario.f) + (1|subject), data = politene
     
 Comparison of models by the Akaike Information Criterion:
 ```{r}
+# v
 AIC(model1, model2, model3, model4)
 ```
 
 Comparing the residual standard deviation of the models:
 ```{r}
-#v
+#v maybe gather everything in a table
 sigma(model1)
 sigma(model2)
 sigma(model3)
@@ -274,7 +275,7 @@ politeness_una <- politeness %>%
 
 politeness_una %>% 
   ggplot(aes(scenario.f, f0mn, color = attitude.f))+
-  geom_point()+
+  geom_point(size = 0.5)+
   geom_point(aes(y = fitted), colour = 'black', size = 0.5)+
   facet_wrap(~subject) +
   theme_minimal()+
