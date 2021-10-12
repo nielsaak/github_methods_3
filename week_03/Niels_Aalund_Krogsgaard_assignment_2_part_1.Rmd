@@ -54,7 +54,9 @@ data_exp_2$correct <- as.factor(data_exp_2$correct)
     ii. describe what the following variables in the data frame contain, _trial.type_, _pas_, _trial_, _target.contrast_, _cue_, _task_, _target_type_, _rt.subj_, _rt.obj_, _obj.resp_, _subject_ and _correct_. (That means you can ignore the rest of the variables in your description). For each of them, indicate and argue for what `class` they should be classified into, e.g. _factor_, _numeric_ etc.  
 
 ```{r}
+#or glimpse(df)
 summary(data_exp_2)
+
 ```
 Description of variables:
 - trial.type: whether the trial in question is from the experimental trials or "staircase" trial. The staircase trials had the purpose of calibrating the contrast of the target stimulus so it matched the specific individuals threshold. This should be coded as a factor.
@@ -85,7 +87,9 @@ data_exp_2_stair <- data_exp_2 %>%
 
 mod_1_no <- glm(correct ~ target.contrast + subject + target.contrast:subject, data = data_exp_2_stair, family = 'binomial')
 
-data_exp_2_stair$fitted <- fitted.values(mod_1_no)
+#fitted() can also just be used 
+#data_exp_2_stair$fitted <- fitted.values(mod_1_no)
+data_exp_2_stair$fitted <- fitted(mod_1_no)
 
 data_exp_2_stair %>% 
   ggplot(aes(target.contrast, fitted)) +
@@ -395,6 +399,11 @@ inv.logit(1.11896 + 0.16603)
 
 I would not say that task explains performance well. To start out, the three different tasks have approximately the same probability of being correct ranging form 73.96% to 78.33% probability. 
 
+```{r}
+r.squaredGLMM(mod_3_par_4)
+```
+
+
     ii. add _pas_ as a main effect on top of _task_ - what are the consequences of that?  
 ```{r}
 mod_3_par_5 <- glmer(correct ~ task + pas + (1|subject), data = data_exp_2_exp, family = "binomial")
@@ -407,6 +416,11 @@ inv.logit(0.14963 + 2.88685)
 ```
 By adding PAS as a main effect the weights for task variables has changed, but also a lot more variance have been explained. It is interesting to see that a trial of pairs and a PAS of 1 has a 53.73% chance of being correct, while a trial of pairs and a PAS of 4 has a 95.42% chance of being correct. This makes very good sense, since a PAS of 4 describes a situation where the participant was aware of experiencing/perceiving a target number. 
 It seems like PAS is a very good predictor of correct.
+
+```{r}
+r.squaredGLMM(mod_3_par_5)
+```
+
 
     iii. now fit a multilevel model that models _correct_ as dependent on _pas_ with a unique intercept for each _subject_
 ```{r}
