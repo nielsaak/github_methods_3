@@ -171,12 +171,13 @@ data_1_2_2 = scaler.fit_transform(data_1_2_1)
 #iv.
 from sklearn.linear_model import LogisticRegression
 
-log_model = LogisticRegression(penalty='none')
+log_model = LogisticRegression(penalty='none', random_state=(12))
 log_model.fit(data_1_2_2, y_1_2[:,0])
 
 #%%
 #v.
 accuracy = log_model.score(data_1_2_2, y_1_2[:,0])
+print(accuracy)
 
 '''The accuracy is at 100%, which does seem a bit troubeling. It could indicate overfitting, but
 we do not know since the data is not divided into training and test. Also, adding no penalty makes
@@ -186,13 +187,14 @@ the risk of overfitting much higher.'''
 #%%
 #vi.
 #for the penalty l1 to work, we need to change solver to be liblinear or saga.
-log_model_l1 = LogisticRegression(penalty='l1', solver = 'liblinear')
+log_model_l1 = LogisticRegression(penalty='l1', solver = 'liblinear', random_state=(12))
 log_model_l1.fit(data_1_2_2, y_1_2[:,0])
 print(len(log_model_l1.coef_[0]) - sum(log_model_l1.coef_[0] == 0))
 
 #270 coefficients are non-zero after applying the l1 penalty
 
 #%%
+#fix stuff
 #vii.
 #the reduced X that I have to make... Is that the data or the coefficients? 
 idx = np.where(log_model_l1.coef_[0] != 0)
@@ -200,11 +202,16 @@ data_1_2_3 = np.squeeze(data_1_2_2[:, idx])
 
 #N = len(data_1_2_3[:,0])
 #cov = np.sum([data_1_2_3[i,:] @ data_1_2_3[i,:].T for i in range(N)])/N
-cov = data_1_2_3.T @ data_1_2_3
+#cov = np.sum([np.dot(data_1_2_3[i,:].reshape(1,-1), data_1_2_3[i,:].reshape(1,-1).T) for i in range(N)])/N
+#N = len(data[:,0,0])
+#cov = sum([data[i,:,:] @ data[i,:,:].T for i in range(N)])/N
+cov = np.cov(data_1_2_3)
+#cov = data_1_2_3.T @ data_1_2_3
+
 plt.imshow(cov)
 
-"""Since there are more lighter colours, I would say that there is more covariance in this plot
-than the one from 1.1.iii"""
+"""Since there are more darker colours, I would say that there is much less covariance in this plot
+compared to the one from 1.1.iii"""
 
 #%%
 #2)
