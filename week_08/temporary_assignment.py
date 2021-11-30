@@ -55,6 +55,7 @@ times = np.arange(-200, 801, 4)
 #iii.
 N = len(data[:,0,0])
 
+#investigate sum and np.sum
 cov = sum([data[i,:,:] @ data[i,:,:].T for i in range(N)])/N
 
 plt.imshow(cov)
@@ -73,13 +74,19 @@ plt.imshow(cov)
 #iv
 rep_mean = np.mean(data, axis = 0)
 
+#time should be the first dimension, so transpose
 
 #%%
 #v.
+
+#if you transpose rep_mean, you do not have to use for-loop
+
 for i in range(len(rep_mean[:,0])):
     plt.plot(times, rep_mean[i,:])
 plt.axvline(0, c = "black")
 plt.axhline(0, c = "black")
+
+
 
 
 #%%
@@ -98,7 +105,7 @@ plt.axvline(times[112], c = "black")
 #viii.
 """
 We found that the sensor, who had the highest average activation for all repititions was the
-sensor 73 at 248 ms.  However, as can be seen in the plot of all repetitions for that particular
+sensor 74 at 248 ms.  However, as can be seen in the plot of all repetitions for that particular
 sensor, there is a large amount of variation or noise throughout. It would be hard to visually detect a signal or difference between the individual repetitions in this plot.
 """
 
@@ -116,6 +123,7 @@ print(data.shape)
 
 #%%
 #ii.
+#investigate argwhere and where
 idx_1 = np.argwhere(y == 1)
 data_pas_1 = np.mean(np.squeeze(data[idx_1,73,:]), axis = 0)
 idx_2 = np.argwhere(y == 2)
@@ -134,6 +142,7 @@ plt.axhline(0, c = "black")
 plt.legend()
 
 #%%
+#ask emil: what is a peak? can a valley count as a peak?
 #iii.
 '''At a pas score of 1 the subject did not subjectively perceive anything, so it might make sense that the amplitude
 is lower, since we would not expect much activation, when "nothing" is there to be perceived or processed.
@@ -170,6 +179,7 @@ data_1_2_2 = scaler.fit_transform(data_1_2_1)
 #%%
 #iv.
 from sklearn.linear_model import LogisticRegression
+
 
 log_model = LogisticRegression(penalty='none', random_state=(12))
 log_model.fit(data_1_2_2, y_1_2[:,0])
